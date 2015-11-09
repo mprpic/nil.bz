@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="personal website">
+    <meta name="author" content="martin@nil.bz">
+    <title>nil.bz | {% block title %}{% endblock %}</title>
+    <link rel="icon" href="/favicon.ico'">
+    <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/app.css') }}" media="screen">
+  </head>
+  <body>
+    {% block content %}
+    {% endblock %}
+  </body>
+</html>

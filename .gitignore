@@ -1,0 +1,4 @@
+config.py
+*.py[cod]
+pip-log.txt
+venv*

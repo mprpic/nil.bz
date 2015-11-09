@@ -1,0 +1,29 @@
+@font-face {
+    font-family: Ubuntu, sans-serif;
+    src: url(http://fonts.googleapis.com/css?family=Ubuntu:regular,bold&subset=Latin);
+}
+
+body {
+    background-color: #002b36;
+    font-size: 14px;
+    color: #839496;
+    font-family: Ubuntu Mono;
+}
+
+pre {
+    margin: 100px 0px 0px 50px;
+}
+
+a {
+    color: #b58900;
+    text-decoration: none;
+}
+
+a:hover {
+    background-color: #073642;
+    color: #839496;
+}
+
+span.prompt {
+    color: #6c71c4;
+}
