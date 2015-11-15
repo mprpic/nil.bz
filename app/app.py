@@ -1,6 +1,7 @@
 import sys
 import config
 from flask import Flask, render_template
+from os import environ
 
 DEBUG = 'DEBUG' in environ.keys()
 
