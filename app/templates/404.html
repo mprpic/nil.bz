@@ -1,0 +1,8 @@
+{% extends "layout.html" %}
+{% block title %}Page not found...{% endblock %}
+{% block content %}
+<div style="width:100%; text-align:center; margin-top:25%">
+  <img src="{{ url_for('static', filename='images/stairs.svg') }}" alt="404!" >
+  <p>This is not the site you're looking for.</p>
+</div>
+{% endblock %}
