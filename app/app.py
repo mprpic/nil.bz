@@ -12,6 +12,10 @@ DEBUG = 'DEBUG' in os.environ.keys()
 
 app = Flask(__name__)
 
+def verify_hash(request_body, header_value):
+    h = hmac.new(config.repo_secret, request_body, hashlib.sha1)
+    return hmac.compare_digest("sha1=" + h.hexdigest(), header_value)
+
 @app.route('/')
 @app.route('/index.html')
 def home():
@@ -27,16 +31,6 @@ def blog():
     return render_template("soon.html")
     # return render_template("blog.html")
 
-@app.route('/climbing-log', strict_slashes=False)
-def climbing():
-    return render_template("soon.html")
-    # remove function: static
-
-@app.route('/ferrata-log', strict_slashes=False)
-def ferrata():
-    return render_template("soon.html")
-    # remove function: static
-
 @app.route('/photos', strict_slashes=False)
 def photos():
     return render_template("photos.html")
@@ -45,6 +39,32 @@ def photos():
 def projects():
     return render_template("soon.html")
     # return render_template("projects.html")
+
+@app.route('/regenerate-climbing-logs', methods=['POST'])
+def regen_logs():
+
+    header_value = request.headers.get('X-Hub-Signature')
+    request_body = request.get_data()
+
+    if verify_hash(request_body, header_value):
+        repo = git.cmd.Git(config.climbing_repo)
+        repo.pull()
+
+        subprocess.call(["python",
+             config.climbing_repo + "generate-log.py",
+             "--input", config.climbing_repo + "data/climbing-data.txt",
+             "--output", config.web_dir + "climbing/climbing.html",
+             "--title", "nil.bz | Climbing Log"])
+        subprocess.call(["python",
+             config.climbing_repo + "generate-log.py",
+             "--ferrata",
+             "--input", config.climbing_repo + "data/ferrata-data.txt",
+             "--output", config.web_dir + "climbing/ferrata.html",
+             "--title", "nil.bz | Ferrata Log"])
+
+        shutil.copy(config.climbing_repo + "css/log.css", config.web_dir + "climbing/")
+
+    return redirect(url_for('home'), code=302)
 
 @app.errorhandler(404)
 def not_found(e):
