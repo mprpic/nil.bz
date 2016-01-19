@@ -48,22 +48,23 @@ def regen_logs():
     request_body = request.get_data()
 
     if verify_hash(request_body, header_value):
-        repo = git.cmd.Git(config.climbing_repo)
-        repo.pull()
+        repo = git.Repo(config.climbing_repo)
+        o = repo.remotes.origin
+        o.pull()
 
         subprocess.call(["python",
              config.climbing_repo + "generate-log.py",
              "--input", config.climbing_repo + "data/climbing-data.txt",
-             "--output", config.web_dir + "climbing/climbing.html",
+             "--output", config.web_dir + "climbing-log",
              "--title", "nil.bz | Climbing Log"])
         subprocess.call(["python",
              config.climbing_repo + "generate-log.py",
              "--ferrata",
              "--input", config.climbing_repo + "data/ferrata-data.txt",
-             "--output", config.web_dir + "climbing/ferrata.html",
+             "--output", config.web_dir + "ferrata-log",
              "--title", "nil.bz | Ferrata Log"])
 
-        shutil.copy(config.climbing_repo + "css/log.css", config.web_dir + "climbing/")
+        shutil.copy(config.climbing_repo + "css/log.css", config.web_dir)
 
     return redirect(url_for('home'), code=302)
 
