@@ -14,7 +14,8 @@ app = Flask(__name__)
 
 def verify_hash(request_body, header_value):
     h = hmac.new(config.repo_secret, request_body, hashlib.sha1)
-    return hmac.compare_digest("sha1=" + h.hexdigest(), header_value)
+    return hmac.compare_digest(bytes("sha1=" + h.hexdigest()),
+                               bytes(header_value))
 
 @app.route('/')
 @app.route('/index.html')
