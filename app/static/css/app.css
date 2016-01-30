@@ -10,8 +10,27 @@ body {
     font-family: Ubuntu Mono;
 }
 
+.blog {
+    position: relative;
+    right: 0%;
+    width: 700px;
+    margin: 100px auto;
+    font-family: Ubuntu;
+    font-size: 16px;
+}
+
+.blogpost_title {
+    padding: 30px 0;
+    font-size: 14px;
+}
+
 pre {
     margin: 100px 0px 0px 50px;
+}
+
+.codeblock {
+    margin: auto;
+    padding: 10px 0;
 }
 
 a {

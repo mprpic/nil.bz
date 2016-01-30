@@ -9,6 +9,7 @@
     <title>nil.bz | {% block title %}{% endblock %}</title>
     <link rel="icon" href="/favicon.ico'">
     <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='css/app.css') }}" media="screen">
+{% block other_js_css %}{% endblock %}
   </head>
   <body>
     {% block content %}

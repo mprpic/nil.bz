@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block description %}Blog post list{% endblock %}
+{% block title %}Blog{% endblock %}
+{% block content %}
+<pre>
+<span class="prompt">[martin@nil blog]</span> tree --timefmt '%b %d, %Y' --noreport
+.
+{% for post_url, post_title in posts[:-1] %}|-- <a href="/blog/{{ post_url }}">{{ post_title }}</a>
+{% endfor %}`-- <a href="/blog/{{ posts[-1][0] }}">{{ posts[-1][1] }}
+</pre>
+{% endblock %}
