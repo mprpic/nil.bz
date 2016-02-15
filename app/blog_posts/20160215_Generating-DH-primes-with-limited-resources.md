@@ -28,7 +28,7 @@ So how do you generate a DH prime? The easiest option is to use the
 `openssl` command, for example:
 
 <pre class="codeblock"><code class="bash">#!/bin/bash
-for i in `seq 1 1000`;
+for i in $(seq 1 1000);
 do
   openssl dhparam 4096 -text >> /home/user/dhprimes/$i 2> /dev/null
 done</code></pre>
