@@ -63,9 +63,9 @@ CPUQuota=10%
 [Install]
 WantedBy=multi-user.target</code></pre>
 
-Another advantage of this setup is that we can run the script as a service,
-without having to use `screen` or other solutions that allow you to run
-jobs in the background.
+Another advantage of using `systemd` service files is that we can run the
+script as a service, without having to use `screen` or other solutions that
+allow you to run jobs in the background.
 
 When we start the service above, `top` starts reporting these values:
 
