@@ -35,8 +35,7 @@ def home():
 
 @app.route('/about', strict_slashes=False)
 def about():
-    return render_template('soon.html')
-    # return render_template('about.html')
+    return render_template('about.html')
 
 @app.route('/blog/<post>', strict_slashes=False)
 def blog_posts(post):
