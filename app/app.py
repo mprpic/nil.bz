@@ -1,5 +1,4 @@
 import os
-import sys
 import config
 import hmac
 import hashlib
@@ -10,26 +9,10 @@ import markdown
 from datetime import datetime
 from flask import Flask, Markup, render_template, redirect, url_for, request
 
-
 DEBUG = 'DEBUG' in os.environ.keys()
 APP_DIR = os.path.dirname(os.path.realpath(__file__))
 
 app = Flask(__name__)
-
-
-def verify_hash(request_body, header_value):
-    h = hmac.new(config.repo_secret, request_body, hashlib.sha1)
-    return hmac.compare_digest(bytes('sha1=' + h.hexdigest()),
-                               bytes(header_value))
-
-
-def blog_post_url(post):
-    print post
-    return post.rstrip('.md').split('_')[1].lower()
-
-
-def blog_post_title(post):
-    return post.rstrip('.md').split('_')[1].replace('-', ' ')
 
 
 @app.route('/')
@@ -43,23 +26,30 @@ def about():
     return render_template('about.html')
 
 
+def blog_post_url(post):
+    return post.rstrip('.md').split('_')[1]
+
+
 @app.route('/blog/<post>', strict_slashes=False)
 def blog_posts(post):
     # Return posts that start with a date; those that don't are drafts
     posts = [f for f in os.listdir(APP_DIR + '/blog_posts') if f[0:7].isdigit()]
-    # Contert post file names into URL IDs
-    stripped_posts = [blog_post_url(i) for i in posts]
+    # Convert post file names into URL IDs
+    post_urls = [blog_post_url(p) for p in posts]
 
-    if post in stripped_posts:
-        p = posts[stripped_posts.index(post)]
+    if post in post_urls:
+        p = posts[post_urls.index(post)]
 
-        post_title = blog_post_title(p)
-        site_title = 'Blog - ' + post_title
         post_date = datetime.strptime(p.split('_')[0], '%Y%m%d') \
                             .strftime('%A, %B %d, %Y')
 
         with open(APP_DIR + '/blog_posts/' + p) as f:
-            content = f.read()
+            content = f.readlines()
+
+        post_title = content[0].replace('Title:', '').strip()
+        site_title = 'Blog - ' + post_title
+
+        content = ''.join(content[2:])
         content = Markup(markdown.markdown(content))
         return render_template('blog_template.html', content=content,
                                site_title=site_title, post_title=post_title,
@@ -75,8 +65,13 @@ def blog():
                     f[0:7].isdigit()], reverse=True)
     post_urls = [blog_post_url(p) for p in posts]
 
-    post_titles = ['[{}]  {}'.format(datetime.strptime(p.split('_')[0], '%Y%m%d').strftime('%b %d, %Y'),
-                                     blog_post_title(p)) for p in posts]
+    post_titles = []
+    for post in posts:
+        with open(APP_DIR + '/blog_posts/' + post) as f:
+            title = f.readlines()[0].replace('Title:', '').strip()
+
+        date = datetime.strptime(post.split('_')[0], '%Y%m%d').strftime('%b %d, %Y')
+        post_titles.append('[{}]  {}'.format(date, title))
 
     return render_template('blog.html', posts=zip(post_urls, post_titles))
 
@@ -90,6 +85,12 @@ def photos():
 def projects():
     return render_template('soon.html')
     # return render_template('projects.html')
+
+
+def verify_hash(request_body, header_value):
+    h = hmac.new(config.repo_secret, request_body, hashlib.sha1)
+    return hmac.compare_digest(bytes('sha1=' + h.hexdigest()),
+                               bytes(header_value))
 
 
 @app.route('/regenerate-climbing-logs', methods=['POST'])

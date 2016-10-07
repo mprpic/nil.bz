@@ -29,6 +29,12 @@ pre {
     margin: 100px 0px 0px 50px;
 }
 
+code {
+    background-color: #073642;
+    padding: 0px 4px 0px 4px;
+    border-radius: 2px;
+}
+
 .codeblock {
     margin: auto;
     padding: 10px 0;

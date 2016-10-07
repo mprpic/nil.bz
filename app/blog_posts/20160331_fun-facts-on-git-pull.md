@@ -1,3 +1,5 @@
+Title: Fun facts on git pull
+
 This is probably my favorite little script that I have configured to
 execute with a Git alias:
 
