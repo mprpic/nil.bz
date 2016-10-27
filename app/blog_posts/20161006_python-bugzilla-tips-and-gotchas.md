@@ -107,7 +107,7 @@ like the one above)
 ## Query building
 
 If you need to build out a very specific bug query, it helps if you can use
-the web UI to do this. You may end up with a list of bugs and pretty long
+the web UI to do this. You may end up with a list of bugs and a pretty long
 URL. Now, if you want to use that same query in a script, you can use a
 handy `url_to_query` method to get the dictionary representation of that
 query:
