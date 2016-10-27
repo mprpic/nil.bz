@@ -71,7 +71,7 @@ bugs one by one. The `get_comments()` function allows us to do just that:
 
 <pre class="codeblock"><code class="python">&gt;&gt;&gt; res = bz.get_comments([1291176, 1312219])
 &gt;&gt;&gt; type(res)
-<type 'dict'></code></pre>
+&lt;type 'dict'&gt;</code></pre>
 
 Note that the returned object is a dictionary with two keys: `bugs` and
 `comments`. I have yet to figure out what the `comments` dictionary is
