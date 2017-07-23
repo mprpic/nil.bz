@@ -1,4 +1,8 @@
 config.py
-*.py[cod]
-pip-log.txt
-venv*
+venv
+error.log
+access.log
+app/static/climbing_logs
+app/static/photos
+app/static/temp
+__pycache__

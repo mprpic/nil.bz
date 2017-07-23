@@ -1,90 +1,66 @@
+try:
+    import config
+except ImportError:
+    print('Config file not found; create a config.py')
+
 import os
-import config
 import hmac
 import hashlib
-import shutil
-import git
-import subprocess
-import markdown
+import asyncio
+import aiofiles
+import aiofiles.os
+from asyncio.subprocess import PIPE, STDOUT
 from datetime import datetime
-from flask import Flask, Markup, render_template, redirect, url_for, request
+from concurrent.futures import ThreadPoolExecutor
 
-DEBUG = 'DEBUG' in os.environ.keys()
-APP_DIR = os.path.dirname(os.path.realpath(__file__))
+import git
+from jinja2 import Environment, FileSystemLoader
+from markdown import Markdown
 
-app = Flask(__name__)
-
-
-@app.route('/')
-@app.route('/index.html')
-def home():
-    return render_template('home.html')
+from sanic import Sanic
+from sanic.response import html, json
+from sanic.exceptions import NotFound, ServerError
+from sanic.log import log
 
 
-@app.route('/about', strict_slashes=False)
-def about():
-    return render_template('about.html')
+BLOG_DIR = './blog_posts'
+TEMPLATE_DIR = './templates'
+STATIC_DIR = './static'
+TEMP_DIR = './temp'
+CLIMBING_LOGS_DIR = os.path.join(STATIC_DIR, 'climbing_logs')
+
+md = Markdown()
+jinja_env = Environment(loader=FileSystemLoader(TEMPLATE_DIR))
+
+app = Sanic(__name__)
+app.post_url_cache = {}
+app.posts_cache = {}
+
+#
+# Static resources
+#
+
+app.static('/static', STATIC_DIR)
+app.static('/temp', TEMP_DIR)
+app.static('/climbing-log', os.path.join(CLIMBING_LOGS_DIR, 'climbing_log.html'))
+app.static('/ferrata-log', os.path.join(CLIMBING_LOGS_DIR, 'ferrata_log.html'))
+
+#
+# Helper functions
+#
 
 
-def blog_post_url(post):
-    return post.rstrip('.md').split('_')[1]
+def render_template(template_name, **kwargs):
+    return jinja_env.get_template(template_name).render(**kwargs)
 
 
-@app.route('/blog/<post>', strict_slashes=False)
-def blog_posts(post):
-    # Return posts that start with a date; those that don't are drafts
-    posts = [f for f in os.listdir(APP_DIR + '/blog_posts') if f[0:7].isdigit()]
-    # Convert post file names into URL IDs
-    post_urls = [blog_post_url(p) for p in posts]
+def get_blog_posts():
+    posts = sorted([f for f in os.listdir(BLOG_DIR) if
+                    f[0:7].isdigit() and f[8] == '_' and f.endswith('.md')],
+                   reverse=True)
+    post_urls = list(filter(None, [post.rstrip('.md').split('_')[1] for post in posts]))
 
-    if post in post_urls:
-        p = posts[post_urls.index(post)]
-
-        post_date = datetime.strptime(p.split('_')[0], '%Y%m%d') \
-                            .strftime('%A, %B %d, %Y')
-
-        with open(APP_DIR + '/blog_posts/' + p) as f:
-            content = f.readlines()
-
-        post_title = content[0].replace('Title:', '').strip()
-        site_title = 'Blog - ' + post_title
-
-        content = ''.join(content[2:])
-        content = Markup(markdown.markdown(content))
-        return render_template('blog_template.html', content=content,
-                               site_title=site_title, post_title=post_title,
-                               post_date=post_date)
-    else:
-        return render_template('404.html'), 404
-
-
-@app.route('/blog', strict_slashes=False)
-def blog():
-    # We can sort (newest first) alphabetically since we're using YYYYMMDD
-    posts = sorted([f for f in os.listdir(APP_DIR + '/blog_posts') if
-                    f[0:7].isdigit()], reverse=True)
-    post_urls = [blog_post_url(p) for p in posts]
-
-    post_titles = []
-    for post in posts:
-        with open(APP_DIR + '/blog_posts/' + post) as f:
-            title = f.readlines()[0].replace('Title:', '').strip()
-
-        date = datetime.strptime(post.split('_')[0], '%Y%m%d').strftime('%b %d, %Y')
-        post_titles.append('[{}]  {}'.format(date, title))
-
-    return render_template('blog.html', posts=zip(post_urls, post_titles))
-
-
-@app.route('/photos', strict_slashes=False)
-def photos():
-    return render_template('photos.html')
-
-
-@app.route('/projects', strict_slashes=False)
-def projects():
-    return render_template('soon.html')
-    # return render_template('projects.html')
+    return posts, post_urls
 
 
 def verify_hash(request_body, header_value):
@@ -93,34 +69,212 @@ def verify_hash(request_body, header_value):
                                bytes(header_value))
 
 
-@app.route('/regenerate-climbing-logs', methods=['POST'])
-def regen_logs():
-    header_value = request.headers.get('X-Hub-Signature')
-    request_body = request.get_data()
+async def run_command(cmd):
+    print('Executing:', cmd)
+    p = await asyncio.create_subprocess_shell(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+    return (await p.communicate())[0]
 
-    if verify_hash(request_body, header_value):
+
+def refresh_repo():
+    try:
         repo = git.Repo(config.climbing_repo)
-        o = repo.remotes.origin
-        o.pull()
+    except git.exc.NoSuchPathError:
+        log.error('Did not find Git repo ' + config.climbing_repo)
+        return json({'error': 'Did not find climbing repo: {}'.format(config.climbing_repo)}, status=400)
 
-        subprocess.call(['python', config.climbing_repo + 'generate-log.py',
-                         '--input', config.climbing_repo + 'data/climbing-data.txt',
-                         '--output', config.web_dir + 'climbing-log',
-                         '--title', 'nil.bz | Climbing Log'])
-        subprocess.call(['python', config.climbing_repo + 'generate-log.py',
-                         '--ferrata',
-                         '--input', config.climbing_repo + 'data/ferrata-data.txt',
-                         '--output', config.web_dir + 'ferrata-log',
-                         '--title', 'nil.bz | Ferrata Log'])
+    try:
+        repo.remotes.origin.pull()
+    except git.exc.GitCommandError:
+        log.error('Did not find Git repo ' + config.climbing_repo)
+        return json({'error': 'Failed to pull in climbing repo: {}'.format(config.climbing_repo)}, status=400)
 
-        shutil.copy(config.climbing_repo + 'css/log.css', config.web_dir)
-
-    return redirect(url_for('home'), code=302)
+#
+# Middleware functions
+#
 
 
-@app.errorhandler(404)
-def not_found(e):
-    return render_template('404.html'), 404
+@app.middleware('response')
+async def add_security_headers(request, response):
+    response.headers = {
+        # HSTS enforces the use of HTTPS
+        'Strict-Transport-Security': 'max-age=31536000',
+
+        # Disallow loading of site in a frame
+        'X-Frame-Options': 'DENY',
+
+        # Prevent browser from guessing the response's content type
+        'X-Content-Type-Options': 'nosniff',
+
+        # Prevent XSS by telling browser to block response when XSS is detected
+        'X-XSS-Protection': '1; mode=block',
+    }
+
+
+@app.listener('before_server_start')
+async def check_files(app, loop):
+    # TODO
+    pass
+
+#
+# Routing
+#
+
+
+@app.route('/')
+@app.route('/index.html')
+async def home(request):
+    return html(render_template('home.html'))
+
+
+@app.route('/about')
+async def home(request):
+    return html(render_template('about.html'))
+
+
+@app.route('/photos')
+async def photos(request):
+    return html(render_template('photos.html'))
+
+
+@app.route('/projects')
+async def projects(request):
+    return html(render_template('soon.html'))
+    # return html(render_template('projects.html'))
+
+
+@app.route('/blog')
+async def blog(request):
+    stats = await aiofiles.os.stat(BLOG_DIR)
+    last_changed = str(stats.st_mtime)
+
+    if last_changed in app.post_url_cache:
+        posts = app.post_url_cache[last_changed]
+
+    else:
+        post_files, post_urls = get_blog_posts()
+
+        post_titles = []
+        for post_file in post_files:
+            async with aiofiles.open(os.path.join(BLOG_DIR, post_file)) as f:
+                title = await f.readline()
+                title = title.replace('Title:', '').strip()
+
+            try:
+                date = datetime.strptime(post_file.split('_')[0], '%Y%m%d').strftime('%b %d, %Y')
+            except ValueError:
+                log.error('Failed to parse date from blog post file ' + post_file)
+                continue
+
+            post_titles.append('[{}]  {}'.format(date, title))
+
+        posts = list(zip(post_urls, post_titles))
+        app.post_url_cache = {last_changed: posts}
+
+    return html(render_template('blog.html', posts=posts))
+
+
+@app.route('/blog/<post>')
+async def blog_posts(request, post):
+    post_files, post_urls = get_blog_posts()
+
+    if post not in post_urls:
+        return html(render_template('404.html'), status=404)
+
+    post_file = post_files[post_urls.index(post)]
+
+    stats = await aiofiles.os.stat(os.path.join(BLOG_DIR, post_file))
+    last_changed = str(stats.st_mtime)
+
+    if (
+            post_file in app.posts_cache and
+            app.posts_cache[post_file]['last_changed'] == last_changed
+    ):
+        return html(app.posts_cache[post_file]['html'])
+
+    else:
+        try:
+            post_date = datetime.strptime(post_file.split('_')[0], '%Y%m%d').strftime('%A, %B %d, %Y')
+        except ValueError:
+            log.error('Failed to parse date from blog post file ' + post_file)
+            return html(render_template('404.html'), status=404)
+
+        async with aiofiles.open(os.path.join(BLOG_DIR, post_file)) as f:
+            content = await f.readlines()
+
+        post_title = content[0].replace('Title:', '').strip()
+        site_title = 'Blog - ' + post_title
+
+        # Converting markdown takes a long time so offload it to a separate
+        # thread so app is not blocked.
+        loop = asyncio.get_event_loop()
+        content = ''.join(content[2:])
+        content = await loop.run_in_executor(ThreadPoolExecutor(), md.convert, content)
+
+        html_content = render_template('blog_template.html', content=content, site_title=site_title,
+                                       post_title=post_title, post_date=post_date)
+
+        app.posts_cache[post_file] = {'last_changed': last_changed, 'html': html_content}
+
+        return html(html_content)
+
+
+@app.route('/api/regenerate-climbing-logs')  # , methods=['POST'])
+async def regen_logs(request):
+    header_value = request.headers.get('X-Hub-Signature')
+    request_body = request.body
+
+    if not verify_hash(request_body, header_value):
+        return json({'error': 'Failed to verify request payload!'})
+
+    loop = asyncio.get_event_loop()
+    error_response = await loop.run_in_executor(ThreadPoolExecutor(), refresh_repo)
+
+    if error_response:
+        return error_response
+
+    # TODO: convert log generator into lib so we can import it instead of
+    # executing ugly shell commands.
+    gen_climb_log_cmd = ('/usr/bin/python {} --input {} --output {} --title "nil.bz | Climbing Log"'
+                         .format(os.path.join(config.climbing_repo, 'generate-log.py'),
+                                 os.path.join(config.climbing_repo, 'data/climbing-data.txt'),
+                                 os.path.abspath(os.path.join(CLIMBING_LOGS_DIR, 'climbing_log.html'))))
+
+    gen_ferrata_log_cmd = ('/usr/bin/python {} --input {} --output {} --title "nil.bz | Climbing Log" --ferrata'
+                           .format(os.path.join(config.climbing_repo, 'generate-log.py'),
+                                   os.path.join(config.climbing_repo, 'data/ferrata-data.txt'),
+                                   os.path.abspath(os.path.join(CLIMBING_LOGS_DIR, 'ferrata_log.html'))))
+
+    # TODO: rewrite to use aiofiles.os.sendfile (even though it looks ugly)
+    copy_css_file_cmd = ('/bin/cp {} {}'.format(os.path.join(config.climbing_repo, 'css/log.css'),
+                                                os.path.join(STATIC_DIR, 'css')))
+
+    commands = [run_command(cmd) for cmd in (gen_climb_log_cmd, gen_ferrata_log_cmd, copy_css_file_cmd)]
+
+    errors = []
+    for cmd in asyncio.as_completed(commands):
+        output = await cmd
+        if output:
+            errors.append(output.decode('utf-8'))
+
+    if errors:
+        return json({'error': 'Encountered errors: {}'.format(', '.join(errors))})
+    else:
+        return json({'message': 'Successfully regenerated climbing logs!'})
+
+#
+# Exception handlers
+#
+
+
+@app.exception(NotFound)
+def not_found(request, exception):
+    return html(render_template('404.html'), status=404)
+
+
+@app.exception(NotFound)
+def server_error(request, exception):
+    return html(render_template('500.html'), status=500)
+
 
 if __name__ == '__main__':
-    app.run(debug=DEBUG)
+    app.run(host=config.host, port=config.port, debug=config.debug, ssl=config.ssl)

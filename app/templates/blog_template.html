@@ -2,8 +2,8 @@
 {% block description %}Blog post{% endblock %}
 {% block title %}{{ site_title }}{% endblock %}
 {% block other_js_css %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/highlight-solarized-dark.css') }}">
-    <script src="{{ url_for('static', filename='js/highlight.pack.js') }}"></script>
+    <link rel="stylesheet" href="/static/css/highlight-solarized-dark.css">
+    <script src="/static/js/highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
 {% endblock %}
 {% block content %}

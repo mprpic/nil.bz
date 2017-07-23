@@ -112,7 +112,9 @@ URL. Now, if you want to use that same query in a script, you can use a
 handy `url_to_query` method to get the dictionary representation of that
 query:
 
-<pre class="codeblock"><code class="python">&gt;&gt;&gt; url = 'https://bugzilla.redhat.com/buglist.cgi?bug_status=NEW&classification=Red%20Hat&component=openssl&product=Red%20Hat%20Enterprise%20Linux%207&query_format=advanced'
+<pre class="codeblock"><code class="python">&gt;&gt;&gt; url = ('https://bugzilla.redhat.com/buglist.cgi?bug_status=NEW'
+           '&classification=Red%20Hat&component=openssl'
+           '&product=Red%20Hat%20Enterprise%20Linux%207&query_format=advanced')
 &gt;&gt;&gt; bz.url_to_query(url)
 {'bug_status': 'NEW', 'product': 'Red Hat Enterprise Linux 7', 'component': 'openssl',
 'query_format': 'advanced', 'classification': 'Red Hat'}
