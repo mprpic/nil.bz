@@ -26,7 +26,8 @@ from sanic.log import log
 BLOG_DIR = './blog_posts'
 TEMPLATE_DIR = './templates'
 STATIC_DIR = './static'
-TEMP_DIR = './temp'
+TEMP_DIR = os.path.join(STATIC_DIR, './temp')
+PHOTOS_DIR = os.path.join(STATIC_DIR, './photos')
 CLIMBING_LOGS_DIR = os.path.join(STATIC_DIR, 'climbing_logs')
 
 md = Markdown()
@@ -42,6 +43,7 @@ app.posts_cache = {}
 
 app.static('/static', STATIC_DIR)
 app.static('/temp', TEMP_DIR)
+app.static('/photos', PHOTOS_DIR)
 app.static('/climbing-log', os.path.join(CLIMBING_LOGS_DIR, 'climbing_log.html'))
 app.static('/ferrata-log', os.path.join(CLIMBING_LOGS_DIR, 'ferrata_log.html'))
 
@@ -64,9 +66,12 @@ def get_blog_posts():
 
 
 def verify_hash(request_body, header_value):
-    h = hmac.new(config.repo_secret, request_body, hashlib.sha1)
-    return hmac.compare_digest(bytes('sha1=' + h.hexdigest()),
-                               bytes(header_value))
+    if not request_body or not header_value:
+        return False
+
+    h = hmac.new(bytes(config.repo_secret, 'utf-8'), request_body, hashlib.sha1)
+    return hmac.compare_digest(bytes('sha1=' + h.hexdigest(), 'utf-8'),
+                               bytes(header_value, 'utf-8'))
 
 
 async def run_command(cmd):
@@ -108,12 +113,6 @@ async def add_security_headers(request, response):
         # Prevent XSS by telling browser to block response when XSS is detected
         'X-XSS-Protection': '1; mode=block',
     }
-
-
-@app.listener('before_server_start')
-async def check_files(app, loop):
-    # TODO
-    pass
 
 #
 # Routing
