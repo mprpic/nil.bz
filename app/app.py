@@ -111,6 +111,9 @@ async def add_security_headers(request, response):
 
         # Prevent XSS by telling browser to block response when XSS is detected
         'X-XSS-Protection': '1; mode=block',
+
+        # We don't need to leak URL to other sites (even within our origin)
+        'Referrer-Policy': 'no-referrer',
     }
 
 #
