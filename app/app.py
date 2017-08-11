@@ -75,7 +75,6 @@ def verify_hash(request_body, header_value):
 
 
 async def run_command(cmd):
-    print('Executing:', cmd)
     p = await asyncio.create_subprocess_shell(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
     return (await p.communicate())[0]
 
@@ -217,7 +216,7 @@ async def blog_posts(request, post):
         return html(html_content)
 
 
-@app.route('/api/regenerate-climbing-logs')  # , methods=['POST'])
+@app.route('/api/regenerate-climbing-logs', methods=['POST'])
 async def regen_logs(request):
     header_value = request.headers.get('X-Hub-Signature')
     request_body = request.body
