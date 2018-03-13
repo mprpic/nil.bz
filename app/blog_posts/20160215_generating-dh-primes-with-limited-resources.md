@@ -1,4 +1,4 @@
-Title: Generating DH primes with limited resources
+Generating DH primes with limited resources
 
 If you own a small VPS that runs your personal website, chances are that
 your CPU is collecting dust most of the time unless you get a ton of

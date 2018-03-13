@@ -1,4 +1,4 @@
-Title: python-bugzilla tips and gotchas
+python-bugzilla tips and gotchas
 
 The [`python-bugzilla`](https://github.com/python-bugzilla/python-bugzilla)
 library is used for interaction with Bugzilla. It's not tied to any

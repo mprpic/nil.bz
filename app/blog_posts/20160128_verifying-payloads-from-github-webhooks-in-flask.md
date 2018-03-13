@@ -1,4 +1,4 @@
-Title: Verifying payloads from GitHub webhooks in Flask
+Verifying payloads from GitHub webhooks in Flask
 
 When receiving payload from GitHub webhooks it's a good idea to validate
 them before taking any action. This assures that your application does not

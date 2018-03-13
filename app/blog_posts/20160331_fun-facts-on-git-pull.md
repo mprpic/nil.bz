@@ -1,4 +1,4 @@
-Title: Fun facts on git pull
+Fun facts on git pull
 
 This is probably my favorite little script that I have configured to
 execute with a Git alias:
@@ -15,6 +15,6 @@ following config in my `~/.gitconfig` file:
 Each time I pull updates in any repository, it takes just enough time to
 complete for me to read a random fun fact:
 
-<pre class="codeblock"><code class="bash">]$ git p
+<pre class="codeblock"><code class="bash">$ git p
  Every time you lick a stamp, you're consuming 1/10 of a calorie.
 Current branch master is up to date.</code></pre>

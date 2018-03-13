@@ -1,8 +1,4 @@
-config.py
 venv
-error.log
-access.log
-app/static/climbing_logs
-app/static/photos
-app/static/temp
+logs
 __pycache__
+html
