@@ -5,7 +5,7 @@
 <pre>
 <span class="prompt">[martin@nil blog]</span> tree --timefmt '%b %d, %Y' --noreport
 .
-{% for post_url, post_title in posts[:-1] %}|-- <a href="/blog/{{ post_url }}">{{ post_title }}</a>
-{% endfor %}`-- <a href="/blog/{{ posts[-1][0] }}">{{ posts[-1][1] }}</a>
+{% for post in posts[:-1] %}|-- <a href="/blog/{{ post['post_url'] }}">[{{ post['post_date'].strftime('%b %d, %Y') }}]  {{ post['post_title'] }}</a>
+{% endfor %}`-- <a href="/blog/{{ posts[-1]['post_url'] }}">[{{ posts[-1]['post_date'].strftime('%b %d, %Y') }}]  {{ posts[-1]['post_title'] }}</a>
 </pre>
 {% endblock %}

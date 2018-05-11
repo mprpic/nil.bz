@@ -13,7 +13,7 @@
 <div class="blog">
   <div class="blogpost_title">
     <h1>{{ post_title }}</h1>
-    <p>{{ post_date }}</p>
+    <p>{{ post_date.strftime('%A, %B %d, %Y') }}</p>
   </div>
 {{ content }}
 </div>

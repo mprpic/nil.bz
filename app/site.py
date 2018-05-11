@@ -48,7 +48,7 @@ def render_blog_posts():
 
         # Split the file name into a date and a URL
         post_date, url  = post.rstrip('.md').split('_')
-        post_date = datetime.strptime(post_date, '%Y%m%d').strftime('%A, %B %d, %Y')
+        post_date = datetime.strptime(post_date, '%Y%m%d')
 
         with open(os.path.join(BLOG_POSTS_DIR, post)) as f:
             content = f.readlines()
@@ -73,8 +73,7 @@ def render_blog_posts():
                       'post_date': post_date, 'post_url': url})
 
     # Render blog list template
-    posts_list = [(post['post_url'], post['post_title']) for post in posts]
-    rendered_template = JINJA_ENV.get_template('blog.html').render(posts=posts_list)
+    rendered_template = JINJA_ENV.get_template('blog.html').render(posts=posts)
 
     with open('./html/blog.html', 'w') as f:
         f.write(rendered_template)
