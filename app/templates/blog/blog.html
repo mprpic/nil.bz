@@ -2,10 +2,12 @@
 {% block description %}Blog post list{% endblock %}
 {% block title %}Blog{% endblock %}
 {% block content %}
-<pre>
-<span class="prompt">[martin@nil blog]</span> tree --timefmt '%b %d, %Y' --noreport
-.
-{% for post in posts[:-1] %}|-- <a href="/blog/{{ post['post_url'] }}">[{{ post['post_date'].strftime('%b %d, %Y') }}]  {{ post['post_title'] }}</a>
-{% endfor %}`-- <a href="/blog/{{ posts[-1]['post_url'] }}">[{{ posts[-1]['post_date'].strftime('%b %d, %Y') }}]  {{ posts[-1]['post_title'] }}</a>
-</pre>
+<div class="content">
+<p><span class="prompt">[martin@nil blog]</span> tree --timefmt '%b %d, %Y' --noreport</p>
+<p>.</p>
+{% for post in posts[:-1] %}
+<p>|-- <a href="/blog/{{ post['post_url'] }}">[{{ post['post_date'].strftime('%b %d, %Y') }}]  {{ post['post_title'] }}</a></p>
+{% endfor %}
+<p>`-- <a href="/blog/{{ posts[-1]['post_url'] }}">[{{ posts[-1]['post_date'].strftime('%b %d, %Y') }}]  {{ posts[-1]['post_title'] }}</a></p>
+</div>
 {% endblock %}
