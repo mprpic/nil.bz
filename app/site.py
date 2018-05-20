@@ -19,6 +19,9 @@ BLOG_TEMPLATES = os.path.join(TEMPLATE_DIR, 'blog')
 BLOG_POSTS_DIR = './blog_posts'
 JINJA_ENV = Environment(loader=FileSystemLoader([SITE_TEMPLATES, COMMON_TEMPLATES, BLOG_TEMPLATES]))
 
+WORDS_PER_MINUTE = 200  # reading speed average
+WORD_LENGTH = 5.1  # word length average (en_US)
+
 log = logging.getLogger(__name__)
 
 
@@ -33,8 +36,18 @@ def render_templates():
             f.write(rendered_template)
 
 
+def estimate_reading_time(text):
+    word_count = len(text) / WORD_LENGTH
+    time = round(word_count / WORDS_PER_MINUTE)
+
+    if time < 2:
+        return '1 minute'
+    else:
+        return '{} minutes'.format(time)
+
+
 def render_blog_posts():
-    
+
     md = Markdown()
 
     # Blog posts are Markdown files starting with a date followed by an
@@ -58,19 +71,19 @@ def render_blog_posts():
             continue
 
         # First line is the post's title
-        post_title = content[0].strip()
+        post_title, content = content[0].strip(), ''.join(content[1:]).strip()
         if not post_title:
             log.error('No title found in blog post: %s', post)
             continue
 
         site_title = 'Blog - ' + post_title
-        
-        # Skip the title and convert from Markdown to HTML
-        content = ''.join(content[1:]).strip()
+        reading_time = estimate_reading_time(content)
+
+        # Convert from Markdown to HTML
         content = md.convert(content)
 
         posts.append({'content': content, 'site_title': site_title, 'post_title': post_title,
-                      'post_date': post_date, 'post_url': url})
+                      'post_date': post_date, 'post_url': url, 'reading_time': reading_time})
 
     # Render blog list template
     rendered_template = JINJA_ENV.get_template('blog.html').render(posts=posts)
@@ -91,7 +104,7 @@ if __name__ == '__main__':
 
     # Scrap previous HTML files
     shutil.rmtree('./html', ignore_errors=True)
-    
+
     # Create new HTML directory
     if not os.path.exists('./html'):
         os.makedirs('./html/blog')
