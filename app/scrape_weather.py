@@ -3,6 +3,8 @@
 # 
 # Add to PATH:
 # export PATH=$PATH:/path/to/geckodriver/directory
+#
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1372998
 
 import os
 import sys
