@@ -1,5 +1,3 @@
-Jinja2
-Markdown
 Pillow
 selenium
 pyyaml

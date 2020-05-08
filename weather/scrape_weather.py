@@ -1,6 +1,6 @@
 # Download geckodriver from:
 # https://github.com/mozilla/geckodriver/releases
-# 
+#
 # Add to PATH:
 # export PATH=$PATH:/path/to/geckodriver/directory
 #
@@ -39,7 +39,7 @@ def scrape_meteoblue(browser, url):
 
     # Accept cookies if loading this site for the first time; otherwise the
     # model image won't load until cookies are accepted.
-    try: 
+    try:
         element = browser.find_element_by_id('accept_all_cookies')
     except NoSuchElementException:
         pass
@@ -132,7 +132,7 @@ def scrape_and_save(browser, location, urls):
 
 if __name__ == '__main__':
 
-    locations = yaml.safe_load(open('./weather_config.yml'))
+    locations = yaml.safe_load(open('weather_config.yml'))
 
     # Remove previous scraped data; create new empty directory for new data
     if os.path.exists(FILE_DIR):
