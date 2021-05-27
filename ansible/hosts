@@ -1,0 +1,2 @@
+[servers]
+nil ansible_host=136.56.89.116 ansible_port=747 ansible_user=martin

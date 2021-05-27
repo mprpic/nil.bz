@@ -9,12 +9,17 @@ from datetime import datetime
 
 from jinja2 import Environment, FileSystemLoader
 from markdown import Markdown
+from distutils.dir_util import copy_tree
 
-TEMPLATE_DIR = './templates'
+CURR_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(CURR_DIR, 'templates')
 SITE_TEMPLATES = os.path.join(TEMPLATE_DIR, 'site')
 COMMON_TEMPLATES = os.path.join(TEMPLATE_DIR, 'common')
 BLOG_TEMPLATES = os.path.join(TEMPLATE_DIR, 'blog')
-BLOG_POSTS_DIR = './blog_posts'
+BLOG_POSTS_DIR = os.path.join(CURR_DIR, 'blog_posts')
+
+BUILD_DIR = os.path.join(CURR_DIR, 'html')
+STATIC_DIR = os.path.join(CURR_DIR, 'static')
 
 WORDS_PER_MINUTE = 200  # reading speed average
 WORD_LENGTH = 5.1  # word length average (en_US)
@@ -30,7 +35,7 @@ def render_templates():
     for template in templates:
         rendered_template = jinja_env.get_template(template).render()
 
-        with open(os.path.join('./html', template), 'w') as f:
+        with open(os.path.join(BUILD_DIR, template), 'w') as f:
             f.write(rendered_template)
 
 
@@ -77,22 +82,25 @@ def render_blog_posts():
     # Render blog posts
     for post in posts:
         rendered_template = jinja_env.get_template('post.html').render(**post)
-        with open(os.path.join('./html/blog/', post['post_url'] + '.html'), 'w') as f:
+        with open(os.path.join(BUILD_DIR, 'blog', post['post_url'] + '.html'), 'w') as f:
             f.write(rendered_template)
 
     # Render blog list
     blog_list = jinja_env.get_template('list.html').render(posts=posts)
-    with open('./html/blog.html', 'w') as f:
+    with open(os.path.join(BUILD_DIR, 'blog.html'), 'w') as f:
         f.write(blog_list)
 
 
 if __name__ == '__main__':
     # Scrap previous HTML files
-    shutil.rmtree('./html', ignore_errors=True)
+    shutil.rmtree(BUILD_DIR, ignore_errors=True)
 
     # Create new HTML directory
-    if not os.path.exists('./html'):
-        os.makedirs('./html/blog')
+    os.makedirs(os.path.join(BUILD_DIR, 'blog'), exist_ok=True)
 
     render_templates()
     render_blog_posts()
+    copy_tree(STATIC_DIR, os.path.join(BUILD_DIR, 'static'))
+
+    # Move entire build to where it's served from
+    #shutil.move(BUILD_DIR, PUBLIC_DIR)

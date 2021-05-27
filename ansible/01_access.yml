@@ -1,0 +1,103 @@
+---
+# Prerequisites:
+# - System must allow root SSH login (disabled when this playbook runs)
+# - System must have existing system user (is prompted for in `system_user` var)
+#
+# Run with:
+# ansible-playbook --ask-pass 01_access.yml
+#
+# Note: tested on Fedora 31 Server
+
+- hosts: localhost
+
+  gather_facts: no
+
+  vars_prompt:
+  - name: target_host
+    prompt: "Enter target host IP"
+    private: no
+
+  tasks:
+    - add_host:
+        name: "{{ target_host }}"
+        groups: my_hosts
+
+- hosts: my_hosts
+
+  user: root
+  gather_facts: False
+
+  vars_prompt:
+    - name: ssh_port
+      prompt: "SSH custom port"
+      private: no
+
+    - name: system_user
+      prompt: "System user name"
+      private: no
+
+  tasks:
+    - name: Add authorized key for user
+      authorized_key:
+        user: "{{ system_user }}"
+        state: present
+        key: https://github.com/mprpic.keys
+
+    - name: Change SSH port in sshd_config
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^Port\s'
+        line: "Port {{ ssh_port }}"
+      notify: Restart sshd
+
+    - name: Disallow password SSH authentication
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "^PasswordAuthentication"
+        line: "PasswordAuthentication no"
+      notify: Restart sshd
+
+    - name: Disallow root SSH access
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "^PermitRootLogin"
+        line: "PermitRootLogin no"
+      notify: Restart sshd
+
+    - name: Disable X11 forwarding
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "^X11Forwarding"
+        line: "X11Forwarding no"
+      notify: Restart sshd
+
+    - name: Disable TCP forwarding
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "^AllowTcpForwarding"
+        line: "AllowTcpForwarding no"
+      notify: Restart sshd
+
+    - name: Allow SSH on custom port in SELinux
+      seport:
+        ports: "{{ ssh_port }}"
+        proto: tcp
+        setype: ssh_port_t
+        state: present
+
+    - name: Allow custom SSH port in firewalld
+      firewalld:
+        port: "{{ ssh_port }}/tcp"
+        permanent: yes
+        state: enabled
+      notify: Reload firewalld
+
+  handlers:
+    - name: Restart sshd
+      service:
+        name: sshd
+        state: restarted
+        enabled: yes
+
+    - name: Reload firewalld
+      command: firewall-cmd --reload

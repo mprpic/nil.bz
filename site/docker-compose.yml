@@ -1,0 +1,10 @@
+version: "3"
+
+services:
+  site:
+    build: .
+    image: nilbz
+    volumes:
+      - ./html:/var/www/html:z
+    ports:
+      - "8080:8080"

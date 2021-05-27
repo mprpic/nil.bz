@@ -1,0 +1,55 @@
+---
+# Run with:
+# ansible-playbook -i hosts --ask-become-pass 04_ddclient.yml
+
+- hosts: all
+
+  become: yes
+  become_method: su
+  become_user: root
+  gather_facts: False
+
+  vars:
+    ddclient_cache_path: /var/cache/ddclient/ddclient.cache
+
+  vars_prompt:
+  - name: dynamic_dns_password
+    prompt: "Enter dynamic DNS password generated in Namecheap"
+    private: yes
+
+  tasks:
+    - name: Install ddclient
+      dnf:
+        name: ddclient
+        state: present
+      notify: Restart ddclient
+
+    - name: Create ddclient.conf
+      template:
+        src: etc_ddclient.j2
+        dest: /etc/ddclient.conf
+        mode: 0600
+      notify: Restart ddclient
+
+    # Workaround for https://mgw.dumatics.com/ddclient-on-fedora-2/
+    - name: Check if ddclient is owned by ddclient
+      stat:
+        path: "{{ ddclient_cache_path }}"
+      register: ddclient_cache
+
+    - name: Create ddclient.cache with correct permissions
+      file:
+        path: "{{ ddclient_cache_path }}"
+        state: touch
+        mode: 0600
+        group: ddclient
+        owner: ddclient
+      when: ddclient_cache.stat.pw_name != "ddclient"
+      notify: Restart ddclient
+
+  handlers:
+    - name: Restart ddclient
+      service:
+        name: ddclient
+        state: restarted
+        enabled: yes
