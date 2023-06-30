@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Blog post">
+    <meta name="author" content="martin@nil.bz">
+    <title>nil.bz | Blog - Fun facts on git pull</title>
+    <link rel="icon" href="/static/images/favicon.ico">
+    <link rel='stylesheet' type='text/css' href="/static/css/site.css" media="screen">
+
+    <link rel="stylesheet" href="/static/css/highlight-solarized-dark.css">
+    <script src="/static/js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+  </head>
+  <body>
+    
+<div class="header">
+  <a href="/">Home</a>|<a href="/blog">Blog List</a>
+</div>
+<div class="blog">
+  <div class="blogpost_title">
+    <h1>Fun facts on git pull</h1>
+    <p>Thursday, March 31, 2016 &bull; Estimated Reading Time: 1 minute</p>
+  </div>
+<p>This is probably my favorite little script that I have configured to
+execute with a Git alias:</p>
+<pre class="codeblock"><code class="bash">#!/bin/bash
+elinks -dump randomfunfacts.com | sed -n '/^│ /p' | tr -d \│</code></pre>
+
+<p>I have this saved as <code>~/bin/fact</code> and linked to a Git alias with the
+following config in my <code>~/.gitconfig</code> file:</p>
+<pre class="codeblock"><code class="ini">[alias]
+    p = !~/bin/fact && git pull</code></pre>
+
+<p>Each time I pull updates in any repository, it takes just enough time to
+complete for me to read a random fun fact:</p>
+<pre class="codeblock"><code class="bash">$ git p
+ Every time you lick a stamp, you're consuming 1/10 of a calorie.
+Current branch master is up to date.</code></pre>
+</div>
+
+  </body>
+</html>

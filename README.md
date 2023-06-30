@@ -1,9 +1,7 @@
 ## Local Setup
 
 ```
-$ python site.py  # Build static files
-$ podman build . -t mysite  # Build container image (only necessary after changes)
-$ podman run -p 8080:8080 -d mysite  # Run site
+caddy start --config Caddyfile
 ```
 
 Navigate to http://localhost:8080/ to view the site.

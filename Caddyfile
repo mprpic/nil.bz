@@ -1,0 +1,14 @@
+http://localhost:8080
+
+# uri strip_suffix .html
+try_files {path}.html
+
+handle_errors {
+    rewrite * html/{err.status_code}.html
+    file_server
+}
+
+file_server {
+    index home.html
+    root html
+}

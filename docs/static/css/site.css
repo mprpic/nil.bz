@@ -1,0 +1,89 @@
+@font-face {
+    font-family: Ubuntu, sans-serif;
+    src: url(https://fonts.googleapis.com/css?family=Ubuntu:regular,bold&subset=Latin);
+}
+
+body {
+    background-color: #002b36;
+    font-size: 14px;
+    color: #839496;
+    font-family: Ubuntu Mono;
+}
+
+.blog {
+    position: relative;
+    right: 0%;
+    max-width: 1000px;
+    margin: 0 auto 100px auto;
+    font-family: Ubuntu;
+    font-size: 16px;
+}
+
+.blogpost_title {
+    margin: 30px 0;
+    font-size: 14px;
+}
+
+.content {
+    margin: 100px 0px 0px 50px;
+}
+
+@media (max-width: 600px) {
+  .content {
+      margin: 20px 0 0 5px;
+  }
+}
+
+@media (max-height: 600px) {
+  .content.about {
+      margin-top: 10px;
+  }
+}
+
+pre.content {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.content > p {
+    margin: 0 0;
+}
+
+code {
+    background-color: #073642;
+    padding: 0px 4px 0px 4px;
+    border-radius: 2px;
+}
+
+.codeblock {
+    margin: auto;
+    padding: 10px 0;
+}
+
+.codeblock > code {
+    border-radius: 7px;
+}
+
+a {
+    color: #b58900;
+    text-decoration: none;
+}
+
+a:hover {
+    background-color: #073642;
+    color: #839496;
+}
+
+span.prompt {
+    color: #6c71c4;
+}
+
+.header {
+    margin: 20px 0 20px 0;
+    text-align: center;
+}
+
+.header > a {
+    margin: 0 10px 0 10px;
+    font-family: Ubuntu;
+}

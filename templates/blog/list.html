@@ -3,7 +3,7 @@
 {% block title %}Blog{% endblock %}
 {% block content %}
 <div class="content">
-<p><span class="prompt">[martin@nil blog]</span> tree --timefmt '%b %d, %Y' --noreport</p>
+<p><span class="prompt">[<a href="/">martin@nil</a> blog]</span> tree --timefmt '%b %d, %Y' --noreport</p>
 <p>.</p>
 {% for post in posts[:-1] %}
 <p>|-- <a href="/blog/{{ post['post_url'] }}">[{{ post['post_date'].strftime('%b %d, %Y') }}]  {{ post['post_title'] }}</a></p>
